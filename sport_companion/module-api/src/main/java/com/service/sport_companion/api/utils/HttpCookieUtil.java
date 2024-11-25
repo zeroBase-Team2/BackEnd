@@ -1,11 +1,11 @@
 package com.service.sport_companion.api.utils;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import jakarta.servlet.http.Cookie;
 
 public class HttpCookieUtil {
 

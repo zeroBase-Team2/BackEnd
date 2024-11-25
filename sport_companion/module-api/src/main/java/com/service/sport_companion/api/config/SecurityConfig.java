@@ -46,8 +46,8 @@ public class SecurityConfig {
                 "/swagger-ui.html",
                 "/swagger-resources/**").permitAll()
             .requestMatchers("/",
-                "/api/v1/auth/kakao",
-                "/api/v1/auth/check-nickname/**",
+                "/api/v1/auth/**",
+                "/api/v1/clubs/all",
                 "/favicon.ico").permitAll()
             .anyRequest().authenticated());
 
