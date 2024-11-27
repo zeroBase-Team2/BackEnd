@@ -3,6 +3,7 @@ package com.service.sport_companion.api.service.impl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+import com.service.sport_companion.api.component.ClubsHandler;
 import com.service.sport_companion.domain.entity.ClubsEntity;
 import com.service.sport_companion.domain.entity.ReservationSiteEntity;
 import com.service.sport_companion.domain.entity.SportsEntity;
@@ -23,18 +24,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ClubsServiceImplTest {
 
   @Mock
-  private ClubsRepository clubsRepository;
+  private ClubsHandler clubsHandler;
 
   @InjectMocks
   private ClubsServiceImpl clubsService;
 
-  private List<ClubsEntity> clubsEntities;
   private List<Clubs> clubsList;
 
   @BeforeEach
   void setUp() {
     // 가짜 ClubsEntity 리스트 생성
-    clubsEntities = List.of(
+    List<ClubsEntity> clubsEntities = List.of(
         ClubsEntity.builder()
             .clubId(1L)
             .clubName("KIA 타이거즈")
@@ -57,7 +57,7 @@ class ClubsServiceImplTest {
 
     // 가짜 Clubs 리스트 생성
     clubsList = clubsEntities.stream()
-        .map(clubsEntity -> new Clubs(clubsEntity.getClubName(), clubsEntity.getEmblemImg()))
+        .map(clubsEntity -> new Clubs(clubsEntity.getClubId(), clubsEntity.getClubName()))
         .toList();
   }
 
@@ -65,7 +65,7 @@ class ClubsServiceImplTest {
   @DisplayName("모든 클럽 리스트 가져오기 성공")
   void getAllClubListSuccessfully() {
     // given
-    when(clubsRepository.findAll()).thenReturn(clubsEntities);
+    when(clubsHandler.getAllClubList()).thenReturn(clubsList);
 
     // when
     ResultResponse resultResponse = clubsService.getAllClubList();

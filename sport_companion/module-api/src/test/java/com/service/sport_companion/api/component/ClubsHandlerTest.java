@@ -6,7 +6,9 @@ import static org.mockito.Mockito.when;
 import com.service.sport_companion.domain.entity.ClubsEntity;
 import com.service.sport_companion.domain.entity.ReservationSiteEntity;
 import com.service.sport_companion.domain.entity.SportsEntity;
+import com.service.sport_companion.domain.model.dto.response.clubs.Clubs;
 import com.service.sport_companion.domain.repository.ClubsRepository;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,18 +29,45 @@ class ClubsHandlerTest {
   private final String CLUB_NAME = "KIA 타이거즈";
 
   private ClubsEntity club;
+  private List<ClubsEntity> clubsEntities;
+  private List<Clubs> clubsList;
 
   @BeforeEach
   void setUp() {
     club = ClubsEntity.builder()
         .clubId(1L)
-        .clubName("KIA 타이거즈")
+        .clubName(CLUB_NAME)
         .clubStadium("광주 기아 챔피언스 필드")
         .sports(SportsEntity.builder().sportId(1L).build())
         .emblemImg("imageUrl1")
         .introduction(null)
         .reservationSite(ReservationSiteEntity.builder().reservationSiteId(1L).build())
         .build();
+
+    clubsEntities = List.of(
+        ClubsEntity.builder()
+            .clubId(1L)
+            .clubName("KIA 타이거즈")
+            .clubStadium("광주 기아 챔피언스 필드")
+            .sports(SportsEntity.builder().sportId(1L).build())
+            .emblemImg("imageUrl1")
+            .introduction(null)
+            .reservationSite(ReservationSiteEntity.builder().reservationSiteId(1L).build())
+            .build(),
+        ClubsEntity.builder()
+            .clubId(2L)
+            .clubName("삼성 라이온즈")
+            .clubStadium("대구 삼성 라이온즈 파크")
+            .sports(SportsEntity.builder().sportId(1L).build())
+            .emblemImg("imageUrl2")
+            .introduction(null)
+            .reservationSite(ReservationSiteEntity.builder().reservationSiteId(1L).build())
+            .build()
+    );
+
+    clubsList = clubsEntities.stream()
+        .map(clubsEntity -> new Clubs(clubsEntity.getClubId(), clubsEntity.getClubName()))
+        .toList();
   }
 
   @Test
@@ -54,4 +83,16 @@ class ClubsHandlerTest {
     assertEquals(response, club);
   }
 
+  @Test
+  @DisplayName("getAllClubList : 모든 구단 정보 반환 성공")
+  void shouldReturnClubList() {
+    // given
+    when(clubsRepository.findAll()).thenReturn(clubsEntities);
+
+    // when
+    List<Clubs> response = clubsHandler.getAllClubList();
+
+    // then
+    assertEquals(clubsList.size(), response.size());
+  }
 }

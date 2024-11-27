@@ -7,6 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class Clubs {
 
+  Long clubId;
   String clubName;
-  String emblemImg;
 }
