@@ -29,18 +29,12 @@ public class AuthController {
 
   private final AuthService authService;
 
-  @GetMapping("/kakao")
-  public ResponseEntity<Void> oAuthForKakao(@RequestParam String code,
-      HttpServletRequest request, HttpServletResponse response) {
+  @PostMapping("/kakao")
+  public ResponseEntity<ResultResponse> oAuthForKakao(HttpServletResponse response,
+      @RequestBody @Valid String code) {
 
-    log.info("Kakao code {}", code);
-    String redirectUrl = authService.oAuthForKakao(code, request, response);
-
-    log.info("Kakao redirect {}", redirectUrl);
-    HttpHeaders headers = new HttpHeaders();
-    headers.setLocation(URI.create(redirectUrl));
-
-    return ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
+    ResultResponse resultResponse = authService.oAuthForKakao(code, response);
+    return new ResponseEntity<>(resultResponse, resultResponse.getStatus());
   }
 
   @GetMapping("/check-nickname/{nickname}")

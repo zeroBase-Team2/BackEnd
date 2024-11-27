@@ -1,7 +1,5 @@
 package com.service.sport_companion.api.service.impl;
 
-import static com.service.sport_companion.api.utils.HttpCookieUtil.addCookieToResponse;
-
 import com.service.sport_companion.api.auth.jwt.JwtUtil;
 import com.service.sport_companion.api.auth.oauth.KakaoAuthHandler;
 import com.service.sport_companion.api.component.ClubsHandler;
@@ -17,10 +15,10 @@ import com.service.sport_companion.domain.entity.UsersEntity;
 import com.service.sport_companion.domain.model.auth.KakaoUserDetailsDTO;
 import com.service.sport_companion.domain.model.dto.request.auth.SignUpDto;
 import com.service.sport_companion.domain.model.dto.response.ResultResponse;
+import com.service.sport_companion.domain.model.dto.response.auth.SignUpData;
 import com.service.sport_companion.domain.model.type.FailedResultType;
 import com.service.sport_companion.domain.model.type.SuccessResultType;
 import com.service.sport_companion.domain.model.type.TokenType;
-import com.service.sport_companion.domain.model.type.UrlType;
 import com.service.sport_companion.domain.model.type.UserRole;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,12 +41,9 @@ public class AuthServiceImpl implements AuthService {
   private final SupportedClubsHandler supportedClubsHandler;
   private final JwtUtil jwtUtil;
 
-  private final long TEN_MINUTES = 10 * 60;
-  private final long ONE_DAY = 24 * 60 * 60;
 
   @Override
-  public String oAuthForKakao(String code,
-      HttpServletRequest request, HttpServletResponse response) {
+  public ResultResponse oAuthForKakao(String code, HttpServletResponse response) {
     // "인가 코드"로 "액세스 토큰" 요청
     String accessToken = kakaoAuthHandler.getAccessToken(code);
 
@@ -58,41 +53,26 @@ public class AuthServiceImpl implements AuthService {
     // 회원 가입 여부 확인
     UsersEntity user = userHandler.findUserByUserInfo(userInfo);
 
-    // 가입 이력이 없는 경우 추가 데이터 입력을 위해 리다이렉트
+    // 가입 이력이 없는 경우 추가 데이터 입력을 위해 회원정보 전달
     if(user == null) {
-      return handleSignup(userInfo, request, response);
+      String nickname = userHandler.getRandomNickname(1);
+      SignUpData signUpData = new SignUpData(userInfo.getProviderId(), nickname);
+
+      userHandler.saveSingUpCacheData(userInfo);
+
+      return new ResultResponse(SuccessResultType.SUCCESS_SIGNUP_REQUIRED, signUpData);
     }
 
-    // 로그인 성공 페이지로 리다이렉트
-    return handleLogin(user, request, response);
-  }
-
-  // 회원가입 처리
-  private String handleSignup(KakaoUserDetailsDTO userInfo,
-      HttpServletRequest request, HttpServletResponse response) {
-    String nickname = userHandler.getRandomNickname(1);
-
-    String signUpData = jwtUtil.createSignupData(userInfo.getProviderId(), nickname);
-
-    // 쿠키 생성 및 응답 헤더 추가
-    addCookieToResponse(request, response, "signUpData", signUpData, TEN_MINUTES);
-
-    userHandler.saveSingUpCacheData(userInfo);
-    return UrlType.SIGNUP_URL.getUrl();
-  }
-
-  // 로그인 처리
-  private String handleLogin(UsersEntity user,
-      HttpServletRequest request, HttpServletResponse response) {
+    // 로그인 성공 : Access, Refresh 토큰 헤더로 전달
     String access = jwtUtil.createJwt("access", user.getUserId(), user.getRole());
     String refresh = jwtUtil.createJwt("refresh", user.getUserId(), user.getRole());
 
-    // 쿠키 생성 및 응답 헤더 추가
-    addCookieToResponse(request, response, TokenType.ACCESS.getValue(), access, TEN_MINUTES);
-    addCookieToResponse(request, response, TokenType.REFRESH.getValue(), refresh, ONE_DAY);
+    response.addHeader(TokenType.ACCESS.getValue(), access);
+    response.addHeader(TokenType.REFRESH.getValue(), refresh);
 
-    return UrlType.FRONT_LOCAL_URL.getUrl();
+    return ResultResponse.of(SuccessResultType.SUCCESS_LOGIN);
   }
+
 
   // 닉네임 중복 검증
   @Override

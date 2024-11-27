@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,7 +24,6 @@ import com.service.sport_companion.domain.model.dto.response.ResultResponse;
 import com.service.sport_companion.domain.model.type.FailedResultType;
 import com.service.sport_companion.domain.model.type.SuccessResultType;
 import com.service.sport_companion.domain.model.type.TokenType;
-import com.service.sport_companion.domain.model.type.UrlType;
 import com.service.sport_companion.domain.model.type.UserRole;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,7 +38,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpHeaders;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
@@ -80,8 +76,9 @@ class AuthServiceImplTest {
   private static final String KAKAO_TOKEN = "kakao-token";
   private static final String KAKAO_PROVIDER = "kakao";
   private static final String KAKAO_PROVIDER_ID = "kakao_provider_id";
+  private static final String ACCESS_TOKEN = "access_token";
   private static final String REFRESH_TOKEN = "refresh_token";
-  private static final String NEW_ACCESS_TOKEN = "access_token";
+  private static final String NEW_ACCESS_TOKEN = "new_access_token";
 
 
   private KakaoUserDetailsDTO kakaoUserDetails;
@@ -132,7 +129,7 @@ class AuthServiceImplTest {
   }
 
   @Test
-  @DisplayName("OAuth2 카카오 회원가입 페이지 리다이렉트 성공")
+  @DisplayName("OAuth2 카카오 회원가입 필요한 회원")
   void redirectToKakaoSignUpPageSuccessfully() {
     // given
     when(kakaoAuthHandler.getAccessToken(CODE)).thenReturn(KAKAO_TOKEN);
@@ -141,31 +138,29 @@ class AuthServiceImplTest {
     when(userHandler.getRandomNickname(1)).thenReturn(NICKNAME);
 
     // when
-    String resultResponse = authServiceImpl.oAuthForKakao(CODE, request, response);
+    ResultResponse resultResponse = authServiceImpl.oAuthForKakao(CODE, response);
 
     // then
-    String response = UrlType.SIGNUP_URL.getUrl();
-    assertEquals(response, resultResponse);
-    verify(jwtUtil).createSignupData(kakaoUserDetails.getProviderId(), NICKNAME);
-    verify(userHandler).saveSingUpCacheData(kakaoUserDetails);
+    assertEquals(SuccessResultType.SUCCESS_SIGNUP_REQUIRED.getStatus(), resultResponse.getStatus());
   }
 
   @Test
-  @DisplayName("OAuth2 카카오 로그인 성공 후 페이지 리다이렉트 성공")
+  @DisplayName("OAuth2 카카오 로그인 성공")
   void redirectToKakaoLoginPageSuccessfully() {
     // given
     when(kakaoAuthHandler.getAccessToken(CODE)).thenReturn(KAKAO_TOKEN);
     when(kakaoAuthHandler.getUserDetails(KAKAO_TOKEN)).thenReturn(kakaoUserDetails);
     when(userHandler.findUserByUserInfo(kakaoUserDetails)).thenReturn(user);
+    when(jwtUtil.createJwt(TokenType.ACCESS.getValue(), user.getUserId(), user.getRole()))
+        .thenReturn(ACCESS_TOKEN);
+    when(jwtUtil.createJwt(TokenType.REFRESH.getValue(), user.getUserId(), user.getRole()))
+        .thenReturn(REFRESH_TOKEN);
 
     // when
-    String resultResponse = authServiceImpl.oAuthForKakao(CODE, request, response);
+    ResultResponse resultResponse = authServiceImpl.oAuthForKakao(CODE, response);
 
     // then
-    String response = UrlType.FRONT_LOCAL_URL.getUrl();
-    assertEquals(response, resultResponse);
-    verify(jwtUtil).createJwt("access", user.getUserId(), user.getRole());
-    verify(jwtUtil).createJwt("refresh", user.getUserId(), user.getRole());
+    assertEquals(SuccessResultType.SUCCESS_LOGIN.getStatus(), resultResponse.getStatus());
   }
 
 
@@ -177,7 +172,7 @@ class AuthServiceImplTest {
         .thenThrow(new GlobalException(FailedResultType.ACCESS_TOKEN_RETRIEVAL));
 
     // when & then
-    assertThrows(GlobalException.class, () -> authServiceImpl.oAuthForKakao(CODE, request, response));
+    assertThrows(GlobalException.class, () -> authServiceImpl.oAuthForKakao(CODE, response));
   }
 
 
@@ -190,7 +185,7 @@ class AuthServiceImplTest {
         .thenThrow(new GlobalException(FailedResultType.USER_INFO_RETRIEVAL));
 
     // when & then
-    assertThrows(GlobalException.class, () -> authServiceImpl.oAuthForKakao(CODE, request, response));
+    assertThrows(GlobalException.class, () -> authServiceImpl.oAuthForKakao(CODE, response));
   }
 
 
@@ -204,7 +199,7 @@ class AuthServiceImplTest {
         .thenThrow(new GlobalException(FailedResultType.EMAIL_ALREADY_USED));
 
     // when & then
-    assertThrows(GlobalException.class, () -> authServiceImpl.oAuthForKakao(CODE, request, response));
+    assertThrows(GlobalException.class, () -> authServiceImpl.oAuthForKakao(CODE, response));
   }
 
 
@@ -219,7 +214,7 @@ class AuthServiceImplTest {
         .thenThrow(new GlobalException(FailedResultType.UNIQUE_NICKNAME_FAILED));
 
     // when & then
-    assertThrows(GlobalException.class, () -> authServiceImpl.oAuthForKakao(CODE, request, response));
+    assertThrows(GlobalException.class, () -> authServiceImpl.oAuthForKakao(CODE, response));
   }
 
 

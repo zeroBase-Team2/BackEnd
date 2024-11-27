@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum SuccessResultType {
 
   // Auth
+  SUCCESS_SIGNUP_REQUIRED(HttpStatus.OK, "회원가입이 필요한 회원입니다."),
   SUCCESS_SIGNUP(HttpStatus.CREATED, "회원가입 성공!"),
   SUCCESS_LOGIN(HttpStatus.OK, "로그인 성공!"),
   AVAILABLE_NICKNAME(HttpStatus.OK, "사용 가능한 닉네임입니다."),
