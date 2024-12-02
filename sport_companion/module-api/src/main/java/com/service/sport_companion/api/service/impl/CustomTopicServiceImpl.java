@@ -113,6 +113,6 @@ public class CustomTopicServiceImpl implements CustomTopicService {
   }
 
   private boolean isAuthor(Long userId, Long authorId) {
-    return userId.equals(authorId);
+    return authorId.equals(userId);
   }
 }

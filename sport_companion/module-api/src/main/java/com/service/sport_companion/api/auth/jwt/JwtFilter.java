@@ -131,6 +131,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
   public boolean isMatchingGetRequest(AntPathMatcher pathMatcher, String requestURI) {
 
-    return pathMatcher.match("/api/v1/fixture", requestURI);
+    return pathMatcher.match("/api/v1/fixture", requestURI)
+        || pathMatcher.match("/api/v1/topic/top5", requestURI);
   }
 }

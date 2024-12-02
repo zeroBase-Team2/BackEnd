@@ -7,10 +7,16 @@ import com.service.sport_companion.core.exception.GlobalException;
 import com.service.sport_companion.domain.entity.CandidateEntity;
 import com.service.sport_companion.domain.entity.VoteEntity;
 import com.service.sport_companion.domain.model.dto.request.vote.CreateVoteDto;
+import com.service.sport_companion.domain.model.dto.request.vote.GetVoteResult;
 import com.service.sport_companion.domain.model.dto.response.ResultResponse;
+import com.service.sport_companion.domain.model.dto.response.vote.CandidateAndCountDto;
+import com.service.sport_companion.domain.model.dto.response.vote.VoteResponse;
 import com.service.sport_companion.domain.model.type.FailedResultType;
 import com.service.sport_companion.domain.model.type.SuccessResultType;
 import jakarta.transaction.Transactional;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -60,7 +66,7 @@ public class VoteServiceImpl implements VoteService {
     voteEntity.update(voteDto);
 
     // 저장된 투표 후보를 가져와 각각 순서에 맞게 업데이트
-    List<CandidateEntity> candidateEntityList = candidateHandler.getCandidateByVoteId(voteId);
+    List<CandidateEntity> candidateEntityList = candidateHandler.findByVoteIdOrderBySequence(voteId);
 
     String[] examples = {
       voteDto.getExample1(),
@@ -83,5 +89,43 @@ public class VoteServiceImpl implements VoteService {
     voteHandler.deleteVoteById(voteId);
 
     return ResultResponse.of(SuccessResultType.SUCCESS_DELETE_VOTE);
+  }
+
+  @Override
+  public ResultResponse<VoteResponse> getThisWeekVote() {
+    // 이번주 투표 시작일인 월요일의 날짜 찾기
+    LocalDate voteStartDate = getVoteStartDate(DayOfWeek.MONDAY);
+
+    VoteEntity voteEntity = voteHandler.findByDate(voteStartDate);
+    List<CandidateEntity> candidateEntity =
+      candidateHandler.findByVoteIdOrderBySequence(voteEntity.getVoteId());
+
+    return new ResultResponse<>(
+      SuccessResultType.SUCCESS_GET_VOTE,
+      VoteResponse.fromExample(voteEntity, candidateEntity)
+    );
+  }
+
+  @Override
+  public ResultResponse<VoteResponse> getVoteResult(Long userId, GetVoteResult getVoteResultDto) {
+    // 입력된 날짜가 없을 경우 이번주 결과를 조회
+    if (getVoteResultDto.getStartDate() == null) {
+      getVoteResultDto.setStartDate(getVoteStartDate(DayOfWeek.MONDAY));
+    }
+
+    VoteEntity voteEntity = voteHandler.findByDate(getVoteResultDto.getStartDate());
+    List<CandidateAndCountDto> candidateEntity =
+      candidateHandler.getCandidateByVoteId(voteEntity.getVoteId());
+
+    return new ResultResponse<>(
+      SuccessResultType.SUCCESS_GET_VOTE,
+      VoteResponse.fromExampleAndVoteCount(voteEntity, candidateEntity)
+    );
+  }
+
+  // 투표 시작 날짜 구하기
+  private LocalDate getVoteStartDate(DayOfWeek dayOfWeek) {
+    return LocalDate.now()
+      .with(TemporalAdjusters.previousOrSame(dayOfWeek));
   }
 }

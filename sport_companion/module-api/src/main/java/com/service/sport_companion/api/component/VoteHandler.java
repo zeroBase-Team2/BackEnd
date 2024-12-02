@@ -34,4 +34,9 @@ public class VoteHandler {
   public boolean existByStartDate(LocalDate startDate) {
     return voteRepository.existsByStartDate(startDate);
   }
+
+  public VoteEntity findByDate(LocalDate voteStartDate) {
+    return voteRepository.findByStartDateBetween(voteStartDate, voteStartDate)
+      .orElseThrow(() -> new GlobalException(FailedResultType.CANT_GET_VOTE_RESULT));
+  }
 }

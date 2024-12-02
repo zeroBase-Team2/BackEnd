@@ -54,6 +54,7 @@ public class SecurityConfig {
                 "/api/v1/fixture/crawl",
                 "/favicon.ico").permitAll()
             .requestMatchers(HttpMethod.GET,
+                "/api/v1/topic/top5",
                 "api/v1/vote/**").authenticated()
             .requestMatchers(
                 "api/v1/vote/**").hasRole(UserRole.ADMIN.name())
