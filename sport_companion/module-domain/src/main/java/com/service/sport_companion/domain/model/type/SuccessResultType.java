@@ -43,6 +43,8 @@ public enum SuccessResultType {
   SUCCESS_MODIFY_VOTE(HttpStatus.OK, "투표가 수정되었습니다."),
   SUCCESS_DELETE_VOTE(HttpStatus.OK, "투표가 삭제되었습니다."),
   SUCCESS_GET_VOTE(HttpStatus.OK, "투표를 성공적으로 조회했습니다."),
+  SUCCESS_CHECK_VOTED(HttpStatus.OK, "투표 여부를 확인했습니다."),
+  SUCCESS_VOTING(HttpStatus.OK, "투표를 완료했습니다."),
 
   ;
 

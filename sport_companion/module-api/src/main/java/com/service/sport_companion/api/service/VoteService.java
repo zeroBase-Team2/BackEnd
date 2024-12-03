@@ -3,6 +3,7 @@ package com.service.sport_companion.api.service;
 import com.service.sport_companion.domain.model.dto.request.vote.CreateVoteDto;
 import com.service.sport_companion.domain.model.dto.request.vote.GetVoteResult;
 import com.service.sport_companion.domain.model.dto.response.ResultResponse;
+import com.service.sport_companion.domain.model.dto.response.vote.CheckVotedResponse;
 import com.service.sport_companion.domain.model.dto.response.vote.VoteResponse;
 
 public interface VoteService {
@@ -16,4 +17,8 @@ public interface VoteService {
   ResultResponse<VoteResponse> getThisWeekVote();
 
   ResultResponse<VoteResponse> getVoteResult(Long userId, GetVoteResult getVoteResult);
+
+  ResultResponse<CheckVotedResponse> checkUserVoted(Long userId);
+
+  ResultResponse<VoteResponse> vote(Long userId, Long voteId, Long candidateId);
 }

@@ -39,4 +39,9 @@ public class VoteHandler {
     return voteRepository.findByStartDateBetween(voteStartDate, voteStartDate)
       .orElseThrow(() -> new GlobalException(FailedResultType.CANT_GET_VOTE_RESULT));
   }
+
+  public VoteEntity findById(Long voteId) {
+    return voteRepository.findById(voteId)
+      .orElseThrow(() -> new GlobalException(FailedResultType.CANT_GET_VOTE_RESULT));
+  }
 }

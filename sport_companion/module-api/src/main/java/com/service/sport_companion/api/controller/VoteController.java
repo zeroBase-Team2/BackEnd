@@ -5,6 +5,7 @@ import com.service.sport_companion.domain.model.annotation.CallUser;
 import com.service.sport_companion.domain.model.dto.request.vote.CreateVoteDto;
 import com.service.sport_companion.domain.model.dto.request.vote.GetVoteResult;
 import com.service.sport_companion.domain.model.dto.response.ResultResponse;
+import com.service.sport_companion.domain.model.dto.response.vote.CheckVotedResponse;
 import com.service.sport_companion.domain.model.dto.response.vote.VoteResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -63,6 +64,22 @@ public class VoteController {
     GetVoteResult getVoteResult
   ) {
     ResultResponse<VoteResponse> response = voteService.getVoteResult(userId, getVoteResult);
+
+    return new ResponseEntity<>(response, response.getStatus());
+  }
+
+  @GetMapping("/user")
+  public ResponseEntity<ResultResponse<CheckVotedResponse>> checkUserVoted(@CallUser Long userId) {
+    ResultResponse<CheckVotedResponse> response = voteService.checkUserVoted(userId);
+
+    return new ResponseEntity<>(response, response.getStatus());
+  }
+
+  @PostMapping("{voteId}/candidate/{candidateId}")
+  public ResponseEntity<ResultResponse<VoteResponse>> vote(@CallUser Long userId,
+    @PathVariable("voteId") Long voteId, @PathVariable("candidateId") Long candidateId
+  ) {
+    ResultResponse<VoteResponse> response = voteService.vote(userId, voteId, candidateId);
 
     return new ResponseEntity<>(response, response.getStatus());
   }
