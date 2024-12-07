@@ -3,11 +3,13 @@ package com.service.sport_companion.api.controller;
 import com.service.sport_companion.api.service.VoteService;
 import com.service.sport_companion.domain.model.annotation.CallUser;
 import com.service.sport_companion.domain.model.dto.request.vote.CreateVoteDto;
-import com.service.sport_companion.domain.model.dto.request.vote.GetVoteResult;
+import com.service.sport_companion.domain.model.dto.response.PageResponse;
 import com.service.sport_companion.domain.model.dto.response.ResultResponse;
 import com.service.sport_companion.domain.model.dto.response.vote.CheckVotedResponse;
 import com.service.sport_companion.domain.model.dto.response.vote.VoteResponse;
+import com.service.sport_companion.domain.model.type.SortType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -60,10 +63,19 @@ public class VoteController {
   }
 
   @GetMapping("/result")
-  public ResponseEntity<ResultResponse<VoteResponse>> getVoteResult(@CallUser Long userId,
-    GetVoteResult getVoteResult
+  public ResponseEntity<ResultResponse<VoteResponse>> getThisWeekVoteResult(@CallUser Long userId) {
+    ResultResponse<VoteResponse> response = voteService.getThisWeekVoteResult(userId);
+
+    return new ResponseEntity<>(response, response.getStatus());
+  }
+
+  @GetMapping("/result/prev")
+  public ResponseEntity<ResultResponse<PageResponse<VoteResponse>>> getPrevVoteResult(
+    @CallUser Long userId,
+    @RequestParam(defaultValue = "UP_TO_DATE") SortType sortType,
+    Pageable pageable
   ) {
-    ResultResponse<VoteResponse> response = voteService.getVoteResult(userId, getVoteResult);
+    ResultResponse<PageResponse<VoteResponse>> response = voteService.getPrevVoteResult(userId, sortType, pageable);
 
     return new ResponseEntity<>(response, response.getStatus());
   }

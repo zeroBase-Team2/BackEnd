@@ -8,12 +8,13 @@ import com.service.sport_companion.core.exception.GlobalException;
 import com.service.sport_companion.domain.entity.CandidateEntity;
 import com.service.sport_companion.domain.entity.VoteEntity;
 import com.service.sport_companion.domain.model.dto.request.vote.CreateVoteDto;
-import com.service.sport_companion.domain.model.dto.request.vote.GetVoteResult;
+import com.service.sport_companion.domain.model.dto.response.PageResponse;
 import com.service.sport_companion.domain.model.dto.response.ResultResponse;
 import com.service.sport_companion.domain.model.dto.response.vote.CandidateAndCountDto;
 import com.service.sport_companion.domain.model.dto.response.vote.CheckVotedResponse;
 import com.service.sport_companion.domain.model.dto.response.vote.VoteResponse;
 import com.service.sport_companion.domain.model.type.FailedResultType;
+import com.service.sport_companion.domain.model.type.SortType;
 import com.service.sport_companion.domain.model.type.SuccessResultType;
 import jakarta.transaction.Transactional;
 import java.time.DayOfWeek;
@@ -21,6 +22,8 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -110,28 +113,45 @@ public class VoteServiceImpl implements VoteService {
   }
 
   @Override
-  public ResultResponse<VoteResponse> getVoteResult(Long userId, GetVoteResult getVoteResultDto) {
-    // 입력된 날짜가 없을 경우 이번주 결과를 조회
-    if (getVoteResultDto.getStartDate() == null) {
-      getVoteResultDto.setStartDate(getVoteStartDate(DayOfWeek.MONDAY));
-    }
-
-    VoteEntity voteEntity = voteHandler.findByDate(getVoteResultDto.getStartDate());
-    List<CandidateAndCountDto> candidateEntity =
+  public ResultResponse<VoteResponse> getThisWeekVoteResult(Long userId) {
+    // 이번주 투표와 결과 조회
+    VoteEntity voteEntity = voteHandler.findByDate(getVoteStartDate(DayOfWeek.MONDAY));
+    List<CandidateAndCountDto> candidateList =
       candidateHandler.getCandidateByVoteId(voteEntity.getVoteId());
 
-    Long votedCandidateId = userVoteHandler.findUserVotedCandidate(
-      userId,
-      candidateEntity.stream()
-        .mapToLong(x -> x.getCandidateEntity().getCandidateId())
-        .boxed()
-        .toList()
-    );
+    Long userVotedCandidateId = getUserVotedCandidateId(userId, candidateList);
 
     return new ResultResponse<>(
       SuccessResultType.SUCCESS_GET_VOTE,
-      VoteResponse.fromExampleAndVoteCount(voteEntity, candidateEntity, votedCandidateId)
+      VoteResponse.fromExampleAndVoteCount(voteEntity, candidateList, userVotedCandidateId)
     );
+  }
+
+  @Override
+  public ResultResponse<PageResponse<VoteResponse>> getPrevVoteResult(
+    Long userId, SortType sortType, Pageable pageable
+  ) {
+    Page<VoteEntity> voteEntityList = getPrevVoteListBySortType(sortType, pageable);
+
+    // 조회한 투표 별로 투표의 결과와 내가 투표한 후보 id 조회
+    List<VoteResponse> response = voteEntityList.stream()
+      .map(voteEntity -> {
+        List<CandidateAndCountDto> candidateList =
+          candidateHandler.getCandidateByVoteId(voteEntity.getVoteId());
+
+        Long votedCandidateId = getUserVotedCandidateId(userId, candidateList);
+
+        return VoteResponse.fromExampleAndVoteCount(voteEntity, candidateList, votedCandidateId);
+      })
+      .toList();
+
+    return new ResultResponse<>(SuccessResultType.SUCCESS_GET_VOTE,
+      new PageResponse<>(
+        voteEntityList.getNumber(),
+        voteEntityList.getTotalPages(),
+        voteEntityList.getTotalElements(),
+        response
+      ));
   }
 
   @Override
@@ -174,5 +194,29 @@ public class VoteServiceImpl implements VoteService {
   private LocalDate getVoteStartDate(DayOfWeek dayOfWeek) {
     return LocalDate.now()
       .with(TemporalAdjusters.previousOrSame(dayOfWeek));
+  }
+
+  // 사용자가 후보 List 중에서 투표한 곳을 조회
+  private Long getUserVotedCandidateId(Long userId, List<CandidateAndCountDto> candidateList) {
+    if (userId == null) {
+      return null;
+    }
+
+    return userVoteHandler.findUserVotedCandidate(
+      userId,
+      candidateList.stream()
+        .mapToLong(x -> x.getCandidateEntity().getCandidateId())
+        .boxed()
+        .toList()
+    );
+  }
+
+  // 지난 투표를 원하는 정렬 조건에 맞는 순서로 pageable 크기만큼 조회
+  private Page<VoteEntity> getPrevVoteListBySortType(SortType sortType, Pageable pageable) {
+    if (sortType.equals(SortType.PARTICIPANT)) {
+      return voteHandler.findPrevVoteOrderByParticipant(getVoteStartDate(DayOfWeek.MONDAY), pageable);
+    } else {
+      return voteHandler.findPrevVoteOrderByUpToDate(getVoteStartDate(DayOfWeek.MONDAY), pageable);
+    }
   }
 }

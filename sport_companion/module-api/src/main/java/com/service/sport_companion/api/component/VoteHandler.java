@@ -7,6 +7,8 @@ import com.service.sport_companion.domain.model.type.FailedResultType;
 import com.service.sport_companion.domain.repository.VoteRepository;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -43,5 +45,15 @@ public class VoteHandler {
   public VoteEntity findById(Long voteId) {
     return voteRepository.findById(voteId)
       .orElseThrow(() -> new GlobalException(FailedResultType.CANT_GET_VOTE_RESULT));
+  }
+
+  // 지난 투표 최신순 조회
+  public Page<VoteEntity> findPrevVoteOrderByUpToDate(LocalDate thisWeekDate, Pageable pageable) {
+    return voteRepository.findByStartDateBeforeOrderByStartDateDesc(thisWeekDate, pageable);
+  }
+
+  // 지난 투표 인기순(투표 참여율이 높은순) 조회
+  public Page<VoteEntity> findPrevVoteOrderByParticipant(LocalDate thisWeekDate, Pageable pageable) {
+    return voteRepository.findAllOrderByParticipant(thisWeekDate, pageable);
   }
 }
