@@ -11,33 +11,25 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "Clubs")
+@Entity(name = "Tips")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Getter
-public class ClubsEntity {
+public class TipsEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long clubId;
+  private Long tipId;
 
   @ManyToOne
-  @JoinColumn(name = "sport_id", nullable = false)
-  private SportsEntity sports;
+  @JoinColumn(name = "club_id", nullable = false)
+  private ClubsEntity clubs;
 
-  @ManyToOne
-  @JoinColumn(name = "reservation_site_id", nullable = false)
-  private ReservationSiteEntity reservationSite;
+  private String SeatName;
 
-  private String clubName;
+  private String theme;
 
-  private String introduction;
-
-  private String clubStadium;
-
-  private String stadiumAddress;
-
-  private String emblemImg;
+  private String SeatNum;
 
 }

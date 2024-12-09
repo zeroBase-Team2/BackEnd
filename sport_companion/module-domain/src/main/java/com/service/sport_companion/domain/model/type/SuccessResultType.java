@@ -31,6 +31,7 @@ public enum SuccessResultType {
   // Fixtures
   SUCCESS_CRAWL_FIXTURE(HttpStatus.OK, "크롤링 성공"),
   SUCCESS_GET_ALL_FIXTURES(HttpStatus.OK, "모든 경기 일정 조회 성공"),
+  SUCCESS_GET_FIXTURES_DETAILS(HttpStatus.OK, "경기상세 정보 조회 성공"),
 
   // CustomTopic
   SUCCESS_CREATE_CUSTOM_TOPIC(HttpStatus.CREATED, "주제가 작성되었습니다."),

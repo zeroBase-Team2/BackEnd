@@ -9,6 +9,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public class Fixtures {
 
+  private Long fixtureId;
+
   private String season;
 
   private LocalDate fixtureDate;
@@ -24,6 +26,8 @@ public class Fixtures {
   private int awayScore;
 
   private String stadium;
+
+  private String stadiumAddress;
 
   private String notes;
 }

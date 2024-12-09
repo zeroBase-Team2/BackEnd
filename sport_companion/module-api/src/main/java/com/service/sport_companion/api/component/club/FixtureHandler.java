@@ -1,8 +1,10 @@
 package com.service.sport_companion.api.component.club;
 
+import com.service.sport_companion.core.exception.GlobalException;
 import com.service.sport_companion.domain.entity.ClubsEntity;
 import com.service.sport_companion.domain.entity.FixturesEntity;
 import com.service.sport_companion.domain.model.dto.response.fixtures.Fixtures;
+import com.service.sport_companion.domain.model.type.FailedResultType;
 import com.service.sport_companion.domain.repository.FixturesRepository;
 import java.time.LocalDate;
 import java.util.List;
@@ -42,6 +44,7 @@ public class FixtureHandler {
   private List<Fixtures> mapToFixturesList(List<FixturesEntity> fixturesEntities) {
     return fixturesEntities.stream()
         .map(fixture -> new Fixtures(
+            fixture.getFixtureId(),
             fixture.getSeason(),
             fixture.getFixtureDate(),
             fixture.getFixtureTime(),
@@ -50,8 +53,17 @@ public class FixtureHandler {
             fixture.getAwayClub().getClubName(),
             fixture.getAwayScore(),
             fixture.getHomeClub().getClubStadium(),
+            fixture.getHomeClub().getStadiumAddress(),
             fixture.getNotes()
         ))
         .toList();
+  }
+
+  /**
+   * fixtureId와 일치하는 경기 일정 조회
+   */
+  public FixturesEntity findClubByFixtureId(Long fixtureId) {
+    return fixturesRepository.findById(fixtureId)
+        .orElseThrow(() -> new GlobalException(FailedResultType.FIXTURE_NOT_FOUND));
   }
 }
