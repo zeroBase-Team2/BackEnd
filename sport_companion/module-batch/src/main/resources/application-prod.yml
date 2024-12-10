@@ -4,13 +4,12 @@ spring:
 
   data:
     redis:
-      port: ${DEV.REDIS.PORT}
-      host: ${DEV.REDIS.HOST}
-      timeout: ${DEV.REDIS.TIMEOUT}
+      port: ${PROD.REDIS.PORT}
+      host: ${PROD.REDIS.HOST}
+      timeout: ${PROD.REDIS.TIMEOUT}
 
   jpa:
     hibernate:
-      # 필요에 따라서 수정 필요
       ddl-auto: update
     show-sql: true
     properties:
@@ -22,6 +21,10 @@ spring:
     open-in-view: false
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DEV.DATABASE.URL}
-    username: ${DEV.DATABASE.USERNAME}
-    password: ${DEV.DATABASE.PASSWORD}
+    url: ${PROD.DATABASE.URL}
+    username: ${PROD.DATABASE.USERNAME}
+    password: ${PROD.DATABASE.PASSWORD}
+
+selenium:
+  server:
+    url: http://selenium:4444

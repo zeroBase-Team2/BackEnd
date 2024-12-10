@@ -1,11 +1,12 @@
 FROM amazoncorretto:17 AS builder
+ARG MODULE_NAME
 
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
 
-COPY module-api module-api
+COPY ${MODULE_NAME} ${MODULE_NAME}
 COPY module-domain module-domain
 COPY module-core module-core
 
@@ -13,10 +14,19 @@ COPY module-core module-core
 RUN chmod +x ./gradlew
 
 # gradle 빌드
-RUN ./gradlew :module-api:bootJar
+RUN ./gradlew :${MODULE_NAME}:bootJar
 FROM amazoncorretto:17
+ARG MODULE_NAME
 
-COPY --from=builder module-api/build/libs/*.jar app.jar
+# 크롬 설치
+RUN yum update
+RUN yum -y install wget
+RUN yum -y install unzip
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+RUN yum -y install google-chrome-stable_current_x86_64.rpm
+RUN rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder ${MODULE_NAME}/build/libs/*.jar app.jar
 
 
 ENTRYPOINT [ "java","-jar","/app.jar" ]

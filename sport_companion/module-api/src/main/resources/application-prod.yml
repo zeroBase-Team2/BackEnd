@@ -59,3 +59,7 @@ cloud:
     static: ${PROD.S3.REGION} # bucket이 위치한 AWS 리전을 설정한다.
   stack:
     auto: false
+
+selenium:
+  server:
+    url: http://selenium:4444
