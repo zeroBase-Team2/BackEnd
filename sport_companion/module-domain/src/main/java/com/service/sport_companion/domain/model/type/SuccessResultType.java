@@ -35,6 +35,7 @@ public enum SuccessResultType {
 
   // CustomTopic
   SUCCESS_CREATE_CUSTOM_TOPIC(HttpStatus.CREATED, "주제가 작성되었습니다."),
+  SUCCESS_UPDATE_CUSTOM_TOPIC(HttpStatus.CREATED, "주제가 수정되었습니다."),
   SUCCESS_DELETE_CUSTOM_TOPIC(HttpStatus.OK, "주제가 삭제되었습니다"),
   SUCCESS_GET_CUSTOM_TOPIC(HttpStatus.OK, "주제를 성공적으로 조회했습니다."),
   SUCCESS_RECOMMEND_TOPIC(HttpStatus.OK, "주제를 추천했습니다."),

@@ -40,4 +40,8 @@ public class CustomTopicEntity {
 
   @CreatedDate
   private LocalDateTime createdAt;
+
+  public void updateTopic(String topic) {
+    this.topic = topic;
+  }
 }

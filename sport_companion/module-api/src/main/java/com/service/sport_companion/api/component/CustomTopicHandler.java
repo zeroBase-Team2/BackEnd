@@ -43,4 +43,8 @@ public class CustomTopicHandler {
   public List<TopicAndRecommendDto> findTop5OrderByVoteCount(LocalDateTime createdAt) {
     return customTopicRepository.findTop5ByCreatedAtAfterOrderByVoteCountDesc(createdAt);
   }
+
+  public Page<TopicAndRecommendDto> findTopicByUserId(Long userId, Pageable pageable) {
+    return customTopicRepository.findTopicByUserId(userId, pageable);
+  }
 }

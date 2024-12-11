@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +32,15 @@ public class CustomTopicController {
     @RequestBody CreateTopicDto createTopicDto
   ) {
     ResultResponse<Void> response = customTopicService.createTopic(userId, createTopicDto);
+
+    return new ResponseEntity<>(response, response.getStatus());
+  }
+
+  @PutMapping("/{topicId}")
+  public ResponseEntity<ResultResponse<Void>> updateTopic(@CallUser Long userId,
+    @PathVariable("topicId") Long topicId, @RequestBody CreateTopicDto updateTopicDto
+  ) {
+    ResultResponse<Void> response = customTopicService.updateTopic(userId, topicId, updateTopicDto);
 
     return new ResponseEntity<>(response, response.getStatus());
   }
@@ -74,6 +84,17 @@ public class CustomTopicController {
   ) {
     ResultResponse<RecommendCountResponse> response =
       customTopicService.updateTopicRecommend(userId, topicId);
+
+    return new ResponseEntity<>(response, response.getStatus());
+  }
+
+  // 로그인한 사용자가 작성한 주제 조회
+  @GetMapping("/my")
+  public ResponseEntity<ResultResponse<PageResponse<CustomTopicResponse>>> getMyTopicList(
+    @CallUser Long userId, Pageable pageable
+  ) {
+    ResultResponse<PageResponse<CustomTopicResponse>> response =
+      customTopicService.getMyTopicList(userId, pageable);
 
     return new ResponseEntity<>(response, response.getStatus());
   }

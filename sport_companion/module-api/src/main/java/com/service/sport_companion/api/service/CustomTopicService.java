@@ -12,6 +12,8 @@ public interface CustomTopicService {
 
   ResultResponse<Void> createTopic(Long userId, CreateTopicDto createTopicDto);
 
+  ResultResponse<Void> updateTopic(Long userId, Long topicId, CreateTopicDto updateTopicDto);
+
   ResultResponse<Void> deleteTopic(Long userId, Long topicId);
 
   ResultResponse<PageResponse<CustomTopicResponse>> getTopicList(Long userId, Pageable pageable);
@@ -19,4 +21,6 @@ public interface CustomTopicService {
   ResultResponse<List<CustomTopicResponse>> getTopicTop5(Long userId);
 
   ResultResponse<RecommendCountResponse> updateTopicRecommend(Long userId, Long topicId);
+
+  ResultResponse<PageResponse<CustomTopicResponse>> getMyTopicList(Long userId, Pageable pageable);
 }

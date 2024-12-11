@@ -27,6 +27,7 @@ public enum FailedResultType {
 
   // CustomTopic
   CUSTOM_TOPIC_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 주제입니다."),
+  UPDATE_TOPIC_FORBIDDEN(HttpStatus.FORBIDDEN, "주제 수정 권한이 없습니다"),
   DELETE_TOPIC_FORBIDDEN(HttpStatus.FORBIDDEN, "주제 삭제 권한이 없습니다"),
   ALREADY_RECOMMEND_TOPIC(HttpStatus.BAD_REQUEST, "이미 추천한 주제입니다."),
 

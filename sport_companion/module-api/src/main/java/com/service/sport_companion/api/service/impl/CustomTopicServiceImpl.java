@@ -42,6 +42,19 @@ public class CustomTopicServiceImpl implements CustomTopicService {
   }
 
   @Override
+  public ResultResponse<Void> updateTopic(Long userId, Long topicId, CreateTopicDto updateTopicDto) {
+    CustomTopicEntity customTopicEntity = customTopicHandler.findById(topicId);
+
+    if (!customTopicEntity.getUsers().getUserId().equals(userId)) {
+      throw new GlobalException(FailedResultType.UPDATE_TOPIC_FORBIDDEN);
+    }
+
+    customTopicEntity.updateTopic(updateTopicDto.getTopic());
+
+    return ResultResponse.of(SuccessResultType.SUCCESS_UPDATE_CUSTOM_TOPIC);
+  }
+
+  @Override
   public ResultResponse<Void> deleteTopic(Long userId, Long topicId) {
     UsersEntity userEntity = userHandler.findByUserId(userId);
     CustomTopicEntity customTopicEntity = customTopicHandler.findById(topicId);
@@ -110,6 +123,31 @@ public class CustomTopicServiceImpl implements CustomTopicService {
     // 현재 추천수 반환
     return new ResultResponse<>(SuccessResultType.SUCCESS_RECOMMEND_TOPIC,
       new RecommendCountResponse(customTopicRecommendHandler.getRecommendCount(topicId)));
+  }
+
+  @Override
+  public ResultResponse<PageResponse<CustomTopicResponse>> getMyTopicList(Long userId,
+    Pageable pageable
+  ) {
+    // 페이지 요청값이 없으면 전체를 조회
+    if (pageable == null) {
+      pageable = Pageable.unpaged();
+    }
+
+    Page<TopicAndRecommendDto> topicPage = customTopicHandler.findTopicByUserId(userId, pageable);
+
+    return new ResultResponse<>(SuccessResultType.SUCCESS_GET_CUSTOM_TOPIC,
+      new PageResponse<>(
+        topicPage.getNumber(),
+        topicPage.getTotalPages(),
+        topicPage.getTotalElements(),
+        topicPage.getContent().stream()
+          .map(topic -> CustomTopicResponse.of(
+            topic.getCustomTopicEntity(),
+            isAuthor(userId, topic.getCustomTopicEntity().getUsers().getUserId()),
+            topic.getRecommendCount())
+          )
+          .toList()));
   }
 
   private boolean isAuthor(Long userId, Long authorId) {

@@ -30,4 +30,12 @@ public interface CustomTopicRepository extends JpaRepository<CustomTopicEntity, 
     + "LIMIT 5")
   List<TopicAndRecommendDto> findTop5ByCreatedAtAfterOrderByVoteCountDesc(
     @Param("createdAt") LocalDateTime createdAt);
+
+  @Query("SELECT new com.service.sport_companion.domain.model.dto.response.topic.TopicAndRecommendDto(c, COUNT(r)) "
+    + "FROM CustomTopicEntity c "
+    + "LEFT JOIN CustomTopicRecommendEntity r ON c = r.customTopic "
+    + "WHERE c.users.userId = :userId "
+    + "GROUP BY c "
+    + "ORDER BY c.createdAt DESC ")
+  Page<TopicAndRecommendDto> findTopicByUserId(@Param("userId") Long userId, Pageable pageable);
 }
