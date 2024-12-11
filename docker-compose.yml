@@ -4,6 +4,9 @@ services:
     container_name: mysql
     env_file:
       - ./data/mysql/env.mysql
+    volumes:
+      - sport_data:/var/lib/mysql
+      - ./data/mysql/schema-mysql.sql:/docker-entrypoint-initdb.d/schema-mysql.sql
     ports:
       - "3306:3306"
     restart: always
@@ -18,14 +21,54 @@ services:
     build:
       context: sport_companion
       dockerfile: Dockerfile
+      args:
+        MODULE_NAME: module-api
     container_name: module_api
     depends_on:
       mysql:
         condition: service_healthy
+      selenium:
+        condition: service_healthy
+    restart: always
     environment:
       ACTIVE_PROFILE: prod
     ports:
       - "8080:8080"
+    networks:
+      - sport-network
+
+  batch:
+    build:
+      context: sport_companion
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: module-batch
+    container_name: module_batch
+    depends_on:
+      mysql:
+        condition: service_healthy
+      selenium:
+        condition: service_healthy
+    restart: always
+    environment:
+      ACTIVE_PROFILE: prod
+    ports:
+      - "8081:8081"
+    networks:
+      - sport-network
+  
+  selenium:
+    image: 'selenium/standalone-chrome:131.0'
+    environment:
+      - SE_ENABLE_TRACING=false
+    container_name: selenium
+    ports: 
+      - "4444:4444"
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
+      timeout: 20s
+      retries: 10
     networks:
       - sport-network
 

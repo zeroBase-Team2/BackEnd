@@ -12,6 +12,9 @@ repositories {
 
 dependencies {
 
+    // Selenium
+    implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.26.0'
+
     // Module
     implementation project(':module-domain')
 

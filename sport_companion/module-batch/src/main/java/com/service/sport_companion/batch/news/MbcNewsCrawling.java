@@ -1,6 +1,5 @@
 package com.service.sport_companion.batch.news;
 
-import com.service.sport_companion.batch.component.WebDriverHandler;
 import com.service.sport_companion.core.exception.GlobalException;
 import com.service.sport_companion.domain.entity.NewsEntity;
 import com.service.sport_companion.domain.model.type.FailedResultType;
@@ -20,6 +19,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
@@ -33,8 +33,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class MbcNewsCrawling {
 
-  private final WebDriverHandler webDriverHandler;
   private final String baseUrl = UrlType.MBC_NEWS_URL.getUrl();
+  private final WebDriver driver;
 
   // 배치로 실행시킬 MBC News 크롤링 메인 작업
   @Transactional
@@ -42,7 +42,11 @@ public class MbcNewsCrawling {
     String url = baseUrl + "/more/search/?mainSearch=%EC%95%BC%EA%B5%AC";
     int pageSize = 5;
 
-    WebDriver driver = webDriverHandler.getWebDriver(url);
+    driver.get(url);
+
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    wait.until(
+      d -> ((JavascriptExecutor) d).executeScript("return jQuery.active == 0"));
 
     try {
       List<NewsEntity> totalNewsList = parsing(driver.getPageSource());

@@ -24,6 +24,7 @@ public enum FailedResultType {
 
   // Crawling
   MBC_NEWS_PARSING_FAILED(HttpStatus.BAD_GATEWAY, "MBC 뉴스 파싱에 실패했습니다."),
+  SELENIUM_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Selenium 서버 접속에 실패했습니다."),
 
   // CustomTopic
   CUSTOM_TOPIC_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 주제입니다."),
