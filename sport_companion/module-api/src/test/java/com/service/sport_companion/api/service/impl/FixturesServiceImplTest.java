@@ -72,7 +72,7 @@ class FixturesServiceImplTest {
 
     awayClub = ClubsEntity.builder()
         .clubId(1L)
-        .clubName("KIA 타이거즈")
+        .clubName("삼성 라이온즈")
         .reservationSite("url~~")
         .build();
 
@@ -152,7 +152,7 @@ class FixturesServiceImplTest {
 
   @Test
   @DisplayName("년도 별 경기 일정 크롤링 성공")
-  void crawlFixturesSuccessfully() {
+  void crawlFixturesSuccess() {
     // given
     doNothing().when(crawlFixtures).crawlFixtures(YEAR);
 
@@ -165,7 +165,7 @@ class FixturesServiceImplTest {
 
   @Test
   @DisplayName("선호구단 경기 일정 조회 성공")
-  void getSupportClubFixturesSuccessfully() {
+  void getSupportClubFixturesSuccess() {
     // given
     when(clubsFacade.getFixtureList(localDate, USERID)).thenReturn(fixtures);
 
@@ -178,10 +178,25 @@ class FixturesServiceImplTest {
     assertEquals(fixtures.getFirst().getHomeClubName(), resultResponse.getData().getFirst().getHomeClubName());
   }
 
+  @Test
+  @DisplayName("특정 구단 경기 일정 조회 성공")
+  void getClubFixturesSuccess() {
+    // given
+    when(clubsFacade.getClubFixtureList(homeClub.getClubName(), localDate)).thenReturn(fixtures);
+
+    // when
+    ResultResponse<List<Fixtures>> resultResponse = fixturesService.getClubFixtureList(homeClub.getClubName(), DATE);
+
+    // then
+    assertEquals(SuccessResultType.SUCCESS_GET_CLUB_FIXTURES.getStatus(), resultResponse.getStatus());
+    assertEquals(fixtures.size(), resultResponse.getData().size());
+    assertEquals(fixtures.getFirst().getHomeClubName(), resultResponse.getData().getFirst().getHomeClubName());
+  }
+
 
   @Test
   @DisplayName("경기 상세 정보 조회")
-  void getAllClubFixturesSuccessfully() {
+  void getAllClubFixturesSuccess() {
     // given
     when(clubsFacade.getFixtureDetails(homeClub.getClubId())).thenReturn(fixtureDetails);
 

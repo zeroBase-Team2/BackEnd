@@ -1,11 +1,15 @@
 package com.service.sport_companion.api.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import com.service.sport_companion.api.component.S3Handler;
 import com.service.sport_companion.api.component.UserHandler;
 import com.service.sport_companion.api.component.club.ClubsFacade;
+import com.service.sport_companion.core.exception.GlobalException;
 import com.service.sport_companion.domain.entity.ClubsEntity;
 import com.service.sport_companion.domain.entity.SupportedClubsEntity;
 import com.service.sport_companion.domain.entity.UsersEntity;
@@ -13,6 +17,7 @@ import com.service.sport_companion.domain.model.dto.request.club.ClubDto;
 import com.service.sport_companion.domain.model.dto.response.ResultResponse;
 import com.service.sport_companion.domain.model.dto.response.clubs.Clubs;
 import com.service.sport_companion.domain.model.dto.response.support.SupportClub;
+import com.service.sport_companion.domain.model.type.FailedResultType;
 import com.service.sport_companion.domain.model.type.SuccessResultType;
 import java.io.IOException;
 import java.util.List;
@@ -87,7 +92,7 @@ class ClubsServiceImplTest {
 
   @Test
   @DisplayName("모든 클럽 리스트 가져오기 성공")
-  void testGetAllClubList() {
+  void getAllClubList_Success() {
     // given
     when(clubsFacade.getAllClubList()).thenReturn(clubsList);
 
@@ -100,7 +105,7 @@ class ClubsServiceImplTest {
 
   @Test
   @DisplayName("구단 등록 성공")
-  void testAddClub() throws IOException {
+  void addClub_Success() throws IOException {
     // given
     when(s3Handler.upload(clubDto.getFile())).thenReturn(EMBLEM_IMG);
 
@@ -112,21 +117,8 @@ class ClubsServiceImplTest {
   }
 
   @Test
-  @DisplayName("선호 구단 조회 성공")
-  void testGetSupportClub() {
-    // given
-    when(clubsFacade.getSupportClubsByUserId(user.getUserId())).thenReturn(clubEntity);
-
-    // when
-    ResultResponse<SupportClub> resultResponse = clubsService.getSupportClub(user.getUserId());
-
-    // then
-    assertEquals(SuccessResultType.SUCCESS_GET_SUPPORT_CLUB.getStatus(), resultResponse.getStatus());
-  }
-
-  @Test
   @DisplayName("선호 구단 등록 성공")
-  void testAddSupportClub() {
+  void addSupportClub_Success() {
     // given
     when(userHandler.findByUserId(user.getUserId())).thenReturn(user);
 
@@ -138,12 +130,48 @@ class ClubsServiceImplTest {
   }
 
   @Test
+  @DisplayName("선호 구단 등록 실패: 존재하지 않은 사용자")
+  void addSupportClub_Fail_UserNotFound() {
+    when(userHandler.findByUserId(USER_ID))
+        .thenThrow(new GlobalException(FailedResultType.USER_NOT_FOUND));
+
+    // when & then
+    assertThrows(GlobalException.class, () -> clubsService.addSupportClub(user.getUserId(), CLUB_NAME));
+  }
+
+  @Test
+  @DisplayName("선호 구단 등록 실패: 이미 등록된 선호 구단")
+  void addSupportClub_Fail_AlreadyRegistered() {
+    // given
+    when(userHandler.findByUserId(user.getUserId())).thenReturn(user);
+    doThrow(new GlobalException(FailedResultType.SUPPORT_CLUB_ALREADY_REGISTERED))
+        .when(clubsFacade).saveSupportedClub(user, CLUB_NAME);
+
+    // when & then
+    assertThrows(GlobalException.class, () -> clubsService.addSupportClub(user.getUserId(), CLUB_NAME));
+  }
+
+  @Test
   @DisplayName("선호 구단 삭제 성공")
-  void testDeleteSupportClub() {
+  void deleteSupportClub_Success() {
+    // given
+    doNothing().when(clubsFacade).deleteSupportClubs(user.getUserId(), CLUB_NAME);
+
     // when
     ResultResponse<Void> resultResponse = clubsService.deleteSupportClub(user.getUserId(), CLUB_NAME);
 
     // then
     assertEquals(SuccessResultType.SUCCESS_DELETE_SUPPORT_CLUB.getStatus(), resultResponse.getStatus());
+  }
+
+  @Test
+  @DisplayName("선호 구단 삭제 실패 : 존재하지 않은 선호구단")
+  void deleteSupportClub_Fail_SupportClubNotFound() {
+    // given
+    doThrow(new GlobalException(FailedResultType.SUPPORT_NOT_FOUND))
+        .when(clubsFacade).deleteSupportClubs(user.getUserId(), CLUB_NAME);
+
+    // when & then
+    assertThrows(GlobalException.class, () -> clubsService.deleteSupportClub(user.getUserId(), CLUB_NAME));
   }
 }

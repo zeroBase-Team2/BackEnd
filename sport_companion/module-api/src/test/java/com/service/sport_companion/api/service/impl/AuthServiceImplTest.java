@@ -76,6 +76,8 @@ class AuthServiceImplTest {
   private static final String ACCESS_TOKEN = "access_token";
   private static final String REFRESH_TOKEN = "refresh_token";
   private static final String NEW_ACCESS_TOKEN = "new_access_token";
+  private static final String CLUB_NAME = "KIA 타이거즈";
+  private static final String EMBLEM_IMG = "emblem.png";
 
 
   private KakaoUserDetailsDTO kakaoUserDetails;
@@ -93,33 +95,33 @@ class AuthServiceImplTest {
     properties.put("nickname", NICKNAME);
 
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put("id", "providerId");
+    attributes.put("id", KAKAO_PROVIDER_ID);
     attributes.put("kakao_account", kakaoAccount);
     attributes.put("properties", properties);
 
     kakaoUserDetails = new KakaoUserDetailsDTO(attributes);
 
     signUpData = SignUpDataEntity.builder()
-        .providerId("providerId123")
-        .email("test@email.com")
-        .provider("kakao")
+        .providerId(KAKAO_PROVIDER_ID)
+        .email(EMAIL)
+        .provider(KAKAO_PROVIDER)
         .build();
 
     user = SignUpDto.of(signUpData, NICKNAME);
 
-    signUpDto = new SignUpDto("providerId123", "nickname", "KIA 타이거즈");
+    signUpDto = new SignUpDto(KAKAO_PROVIDER_ID, NICKNAME, CLUB_NAME);
 
     club = ClubsEntity.builder()
         .clubId(1L)
-        .clubName("KIA 타이거즈")
-        .emblemImg("emblem.png")
+        .clubName(CLUB_NAME)
+        .emblemImg(EMBLEM_IMG)
         .build();
 
   }
 
   @Test
-  @DisplayName("OAuth2 카카오 회원가입 필요한 회원")
-  void redirectToKakaoSignUpPageSuccessfully() {
+  @DisplayName("OAuth2 회원가입 필요")
+  void oAuthSignUpRequired() {
     // given
     when(kakaoAuthHandler.getAccessToken(CODE)).thenReturn(KAKAO_TOKEN);
     when(kakaoAuthHandler.getUserDetails(KAKAO_TOKEN)).thenReturn(kakaoUserDetails);
@@ -133,16 +135,17 @@ class AuthServiceImplTest {
     assertEquals(SuccessResultType.SUCCESS_SIGNUP_REQUIRED.getStatus(), resultResponse.getStatus());
   }
 
+
   @Test
-  @DisplayName("OAuth2 카카오 로그인 성공")
-  void redirectToKakaoLoginPageSuccessfully() {
+  @DisplayName("OAuth2 로그인 성공")
+  void oAuthLoginSuccess() {
     // given
     when(kakaoAuthHandler.getAccessToken(CODE)).thenReturn(KAKAO_TOKEN);
     when(kakaoAuthHandler.getUserDetails(KAKAO_TOKEN)).thenReturn(kakaoUserDetails);
     when(userHandler.findUserByUserInfo(kakaoUserDetails)).thenReturn(user);
-    when(jwtUtil.createJwt(TokenType.ACCESS.getValue(), user.getUserId(), user.getRole()))
+    when(jwtUtil.createJwt(TokenType.ACCESS.getValue(), user.getUserId(), user.getNickname(), user.getRole()))
         .thenReturn(ACCESS_TOKEN);
-    when(jwtUtil.createJwt(TokenType.REFRESH.getValue(), user.getUserId(), user.getRole()))
+    when(jwtUtil.createJwt(TokenType.REFRESH.getValue(), user.getUserId(), user.getNickname(), user.getRole()))
         .thenReturn(REFRESH_TOKEN);
 
     // when
@@ -155,7 +158,7 @@ class AuthServiceImplTest {
 
   @Test
   @DisplayName("OAuth2 카카오 Access 토큰 발급 실패")
-  void failedGetAccessToken() {
+  void accessTokenFailure() {
     // given
     when(kakaoAuthHandler.getAccessToken(CODE))
         .thenThrow(new GlobalException(FailedResultType.ACCESS_TOKEN_RETRIEVAL));
@@ -166,8 +169,8 @@ class AuthServiceImplTest {
 
 
   @Test
-  @DisplayName("OAuth2 카카오 사용자 정보 반환 실패")
-  void failedGetUserDetails() {
+  @DisplayName("OAuth2 카카오 사용자 정보 조회 실패")
+  void userDetailsFailure() {
     // given
     when(kakaoAuthHandler.getAccessToken(CODE)).thenReturn(KAKAO_TOKEN);
     when(kakaoAuthHandler.getUserDetails(KAKAO_TOKEN))
@@ -179,8 +182,8 @@ class AuthServiceImplTest {
 
 
   @Test
-  @DisplayName("OAuth2 다른 소셜 사이트로 회원가입 한 경우")
-  void failedFindUserByUserInfo() {
+  @DisplayName("다른 소셜 회원가입")
+  void otherSocialSignUp() {
     // given
     when(kakaoAuthHandler.getAccessToken(CODE)).thenReturn(KAKAO_TOKEN);
     when(kakaoAuthHandler.getUserDetails(KAKAO_TOKEN)).thenReturn(kakaoUserDetails);
@@ -194,7 +197,7 @@ class AuthServiceImplTest {
 
   @Test
   @DisplayName("OAuth2 랜덤 닉네임 발급 실패")
-  void failedGetRandomNickname() {
+  void randomNicknameFailure() {
     // given
     when(kakaoAuthHandler.getAccessToken(CODE)).thenReturn(KAKAO_TOKEN);
     when(kakaoAuthHandler.getUserDetails(KAKAO_TOKEN)).thenReturn(kakaoUserDetails);
@@ -242,9 +245,10 @@ class AuthServiceImplTest {
     assertEquals(response.getMessage(), "이미 사용 중인 닉네임입니다.");
   }
 
+
   @Test
   @DisplayName("회원가입 성공")
-  void signupSuccessfully() {
+  void signUpSuccess() {
     // given
     when(redisHandler.getSignUpDataByProviderId(signUpDto.getProviderId())).thenReturn(signUpData);
 
@@ -256,8 +260,8 @@ class AuthServiceImplTest {
   }
 
   @Test
-  @DisplayName("회원가입 실패 : 잘못된 ProviderId")
-  void failedGetSignUpDataByProviderId() {
+  @DisplayName("회원가입 실패")
+  void signUpFailure() {
     // given
     when(redisHandler.getSignUpDataByProviderId(signUpDto.getProviderId()))
         .thenThrow(new GlobalException(FailedResultType.PROVIDER_ID_NOT_FOUND));
@@ -267,15 +271,15 @@ class AuthServiceImplTest {
   }
 
   @Test
-  @DisplayName("Access-Token 재발급 성공")
-  void success_Reissue_RefreshToken() {
+  @DisplayName("Access 토큰 재발급 성공")
+  void tokenReissueSuccess() {
     // given
     Cookie mockCookie = new Cookie(TokenType.REFRESH.getValue(), REFRESH_TOKEN);
     when(request.getCookies()).thenReturn(new Cookie[] { mockCookie });
     when(jwtUtil.isExpired(REFRESH_TOKEN)).thenReturn(false);
     when(jwtUtil.getUserId(REFRESH_TOKEN)).thenReturn(USERID);
     when(userHandler.findByUserId(USERID)).thenReturn(user);
-    when(jwtUtil.createJwt("access", user.getUserId(), user.getRole())).thenReturn(NEW_ACCESS_TOKEN);
+    when(jwtUtil.createJwt("access", user.getUserId(), user.getNickname(), user.getRole())).thenReturn(NEW_ACCESS_TOKEN);
 
     // when
     ResultResponse<Void> resultResponse = authServiceImpl.reissueToken(request, response);
@@ -285,10 +289,10 @@ class AuthServiceImplTest {
     verify(response).addHeader(TokenType.ACCESS.getValue(), NEW_ACCESS_TOKEN);
   }
 
-  // 실패 케이스: 쿠키 값이 null인 경우
+
   @Test
-  @DisplayName("Access-Token 재발급 실패 : 쿠키값이 null인 경우")
-  void reissue_RefreshToken_CookieIsNull() {
+  @DisplayName("쿠키 없음으로 재발급 실패")
+  void tokenReissueCookieMissing() {
     // given
     when(request.getCookies()).thenReturn(null);
 
@@ -297,8 +301,8 @@ class AuthServiceImplTest {
   }
 
   @Test
-  @DisplayName("Access-Token 재발급 실패 : refresh 토큰이 만료가 된경우")
-  void reissue_RefreshToken_Expired() {
+  @DisplayName("토큰 만료로 재발급 실패")
+  void tokenReissueTokenExpired() {
     // given
     Cookie mockCookie = new Cookie(TokenType.REFRESH.getValue(), REFRESH_TOKEN);
     when(request.getCookies()).thenReturn(new Cookie[] { mockCookie });
