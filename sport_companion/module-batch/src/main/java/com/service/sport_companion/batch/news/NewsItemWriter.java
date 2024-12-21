@@ -17,12 +17,15 @@ public class NewsItemWriter implements ItemWriter<NewsEntity> {
 
   @Override
   public void write(Chunk<? extends NewsEntity> chunk) {
+    int savedNewsCount = 0;
     for (NewsEntity newsEntity : chunk) {
       if (!newsRepository.existsByNewsLink(newsEntity.getNewsLink())) {
+        savedNewsCount++;
         log.info("뉴스 DB 저장: {}", newsEntity.getHeadline());
 
         newsRepository.save(newsEntity);
       }
     }
+    log.info("총 {} 개 뉴스 데이터를 저장했습니다.", savedNewsCount);
   }
 }

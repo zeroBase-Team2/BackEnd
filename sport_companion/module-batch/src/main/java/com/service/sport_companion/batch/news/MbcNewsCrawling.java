@@ -41,6 +41,7 @@ public class MbcNewsCrawling {
   // 배치로 실행시킬 MBC News 크롤링 메인 작업
   @Transactional
   public List<NewsEntity> crawlingMain() {
+    log.info("MBC 뉴스 크롤링 시작");
     String url = baseUrl + "/more/search/?mainSearch=%EC%95%BC%EA%B5%AC";
     int pageSize = 5;
 
@@ -66,6 +67,7 @@ public class MbcNewsCrawling {
 
     } finally {
       driver.quit();
+      log.info("MBC 뉴스 크롤링 종료");
     }
   }
 
